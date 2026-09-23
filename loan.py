@@ -65,3 +65,12 @@ y=df_copy['loan_status']
 
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+
+numeric_cols = ['person_age', 'person_income', 'person_emp_length', 'loan_amnt',
+                     'loan_int_rate', 'loan_percent_income', 'cb_person_cred_hist_length']
+
+categorical_cols = ['person_home_ownership', 'loan_intent', 'loan_grade', 'cb_person_default_on_file']
+
+print("Numeric columns:", numeric_cols)
+print("Categorical columns:", categorical_cols)
+
