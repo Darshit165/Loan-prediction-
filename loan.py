@@ -33,3 +33,35 @@ for col in numeric_columns:
 
 print((df["person_age"]>100).sum())
 print((df["person_emp_length"]>60).sum())
+
+#Correlation check
+sns.heatmap(df.corr(numeric_only=True), annot=True, cmap='coolwarm')
+plt.show()
+
+#Data Validation & Outlier Handling
+# Handle outliers for person_age and person_emp_length
+df_copy=df.copy()
+print(f"Original Rows: {df_copy.shape[0]}")
+
+#Remove Duplicate rows
+df_copy.drop_duplicates(inplace=True)
+print(f"Rows after removing duplicates : {df_copy.shape[0]}")
+
+# Handle outliers for person_age and person_emp_length
+#Remove ages below 18 or below 100
+df_copy=df_copy[(df_copy["person_age"]>=18) & (df_copy["person_age"]<=100)]
+#Remove employment length greater than age or extreme outliers (>60)
+df_copy = df_copy[df_copy['person_emp_length'] <= df_copy['person_age']]
+df_copy = df_copy[df_copy['person_emp_length'] <= 60]
+
+#Remove the rows with zero or negative income and loan amount
+df_copy = df_copy[df_copy['loan_amnt'] > 0]
+
+print("Loan intreset rate range from (min: 5.42 and max: 23.22)")
+
+#Features, Target & Train-Test Split
+x=df_copy.drop(columns=['loan_status'])
+y=df_copy['loan_status']
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
