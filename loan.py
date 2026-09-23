@@ -74,3 +74,11 @@ categorical_cols = ['person_home_ownership', 'loan_intent', 'loan_grade', 'cb_pe
 print("Numeric columns:", numeric_cols)
 print("Categorical columns:", categorical_cols)
 
+#handle imbalance in target variable
+#0 -> no loan (most)
+#1 -> yes loan
+
+neg, pos = np.bincount(y_train)
+scale_weigths = neg/pos
+print(f"Scale weights for handling imbalance: {scale_weigths}")
+
