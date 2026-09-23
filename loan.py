@@ -129,3 +129,44 @@ preprocessor_xg = ColumnTransformer(
 print("Preprocessor for Logistic Regression:", preprocessor_lr)
 print("Preprocessor for XGBoost and Random Forest:", preprocessor_xg)
 
+#Stratified Cross-Validation
+# One single train-test split may not be reliable.
+# We split the training data into five folds instead.
+# We check the model's score across all folds.
+
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, confusion_matrix, precision_score, recall_score,classification_report
+from sklearn.model_selection import cross_validate
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
+from itertools import starmap
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+scoring_metrics = {"accuracy":"accuracy","precision":"precision","recall":"recall","f1":"f1","roc_auc":"roc_auc"}
+
+#logistic regression cross-validation
+lr_cv_pipeline = Pipeline(steps=[('preprocessor', preprocessor_lr),
+                                 ('classifier', LogisticRegression(max_iter=1000,class_weight="balanced",random_state=42))
+                                 ])
+#random forest cross-validation
+rf_cv_pipeline = Pipeline(steps=[('preprocessor', preprocessor_xg),
+                                 ('classifier', RandomForestClassifier(class_weight="balanced", random_state=42,n_estimators=300,max_depth=5))
+                                 ])
+#xgboost cross-validation
+xg_cv_pipeline = Pipeline(steps=[('preprocessor', preprocessor_xg),
+                                 ('classifier', XGBClassifier(random_state=42,scale_pos_weight=scale_weigths,n_estimators=300,max_depth=5,learning_rate=0.1))
+                                 ])
+
+for cv_name,pipe in [("Logistic Regression", lr_cv_pipeline),
+                     ("Random Forest", rf_cv_pipeline),
+                     ("XGBoost", xg_cv_pipeline)]:
+    cv_result = cross_validate(pipe, X_train, y_train, cv=cv, scoring=scoring_metrics,n_jobs=-1)
+    print(cv_name)
+    print(f"ROC-AUC : {cv_result['test_roc_auc'].mean()}")
+    print(f"Accuracy : {cv_result['test_accuracy'].mean()}")
+    print(f"Precision : {cv_result['test_precision'].mean()}")
+    print(f"Recall : {cv_result['test_recall'].mean()}")
+    print(f"F1 : {cv_result['test_f1'].mean()}")
+    print()
+
