@@ -99,3 +99,33 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
+
+preprocessor_lr = ColumnTransformer(
+    transformers=[
+        ('num', Pipeline(steps=[
+            ('imputer', SimpleImputer(strategy='mean')),
+            ('scaler', StandardScaler())
+        ]), numeric_cols),
+        ('cat', Pipeline(steps=[
+            ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
+            ('onehot', OneHotEncoder(handle_unknown='ignore'))
+        ]), categorical_cols)
+    ]
+)
+
+#pipeline for XGboost and random forest
+preprocessor_xg = ColumnTransformer(
+    transformers=[
+        ('num', Pipeline(steps=[
+            ('imputer', SimpleImputer(strategy='mean'))
+        ]), numeric_cols),
+        ('cat', Pipeline(steps=[
+            ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
+            ('onehot', OneHotEncoder(handle_unknown='ignore'))
+        ]), categorical_cols)
+    ]
+)
+
+print("Preprocessor for Logistic Regression:", preprocessor_lr)
+print("Preprocessor for XGBoost and Random Forest:", preprocessor_xg)
+
