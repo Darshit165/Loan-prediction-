@@ -1,3 +1,5 @@
+from unicodedata import numeric
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -82,3 +84,18 @@ neg, pos = np.bincount(y_train)
 scale_weigths = neg/pos
 print(f"Scale weights for handling imbalance: {scale_weigths}")
 
+#Data Preprocessing — Pipelines & Column Transformer
+#Raw data is not ready for a model directly.
+#We need to prepare numeric and text columns differently.
+#We will build a Pipeline for each model.
+#We will use ColumnTransformer to apply different steps to different columns.
+
+#Preprocessing for Logistic Regression
+#Fill missing numeric values.
+#Scale numeric values, since this model is sensitive to scale.
+#Convert category columns into numbers using one-hot encoding.
+
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.impute import SimpleImputer
