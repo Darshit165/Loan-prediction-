@@ -235,3 +235,30 @@ randomforest=Pipeline([
 ])
 randomforest.fit(X_train,y_train)
 evaluate_model("Baseline Random Forest", randomforest, X_test, y_test)
+#random forest Hyperparameter Tuning
+from sklearn.model_selection import RandomizedSearchCV,GridSearchCV
+param_grid_forest = {
+    "classifier__n_estimators": [231],
+    "classifier__max_depth" : [4],
+    "classifier__min_samples_split" :[8],
+    "classifier__min_samples_leaf" : [2],
+    "classifier__max_features" : ["sqrt"],
+    "classifier__max_leaf_nodes" : [32],
+    "classifier__min_impurity_decrease" :[0.000301742493144741],
+    "classifier__criterion":["entropy"],
+    "classifier__bootstrap" : [True],
+    "classifier__oob_score" : [False],
+    "classifier__warm_start" : [True],
+    "classifier__class_weight" : ["balanced"]
+}
+
+random_search_forest= RandomizedSearchCV(
+    randomforest,
+    param_grid_forest,
+    cv=cv,
+    scoring="average_precision",
+    n_jobs=-1,
+    verbose=3
+)
+random_search_forest.fit(X_train,y_train)
+evaluate_model("Random Forest after Hyperparameter Tuning", random_search_forest.best_estimator_, X_test, y_test)
