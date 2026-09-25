@@ -262,3 +262,12 @@ random_search_forest= RandomizedSearchCV(
 )
 random_search_forest.fit(X_train,y_train)
 evaluate_model("Random Forest after Hyperparameter Tuning", random_search_forest.best_estimator_, X_test, y_test)
+
+#train model with xgboost
+from sklearn.pipeline import Pipeline
+xgb_model=Pipeline([
+    ("preprocessor",preprocessor_xg),
+    ("classifier",XGBClassifier(random_state=42,scale_pos_weight=scale_weigths,learning_rate=0.1))
+])
+xgb_model.fit(X_train,y_train)
+evaluate_model("XGBoost Model", xgb_model, X_test, y_test)
