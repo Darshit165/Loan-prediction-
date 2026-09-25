@@ -374,3 +374,88 @@ evaluate_model(
     y_test,
     threshold=best_threshold
 )
+
+#Probability Calibration
+#Sometimes a model's probability doesn't mean what it says.
+#For example, 30% risk should truly mean a 30% chance.
+#We check this with a calibration plot.
+#We fix it if the probabilities are off.
+
+"""
+Methods by which we can fix the poorly calibrated model.
+1. Platt Scaling/ Sigmoid -> Adjust the probabilites using a sigmoid curve.
+2. Isotonic Regression -> Learn a flexible mapping from old prob. - better prob. (non-linear calibartion)
+3. Temperature Scaling -> Adjust the confidence of neural-network predictions using one temperature
+"""
+
+#1. Calibrated XGBoost model
+from sklearn.calibration import CalibratedClassifierCV, calibration_curve
+best_model = xgb_tune.best_estimator_
+calibrated_model = CalibratedClassifierCV(
+    best_model,
+    method="sigmoid",
+    cv=5
+)
+
+calibrated_model.fit(X_train, y_train)
+#2. Get probabilites
+uncalibrated = xgb_model.predict_proba(X_test)[:,1]
+calibrated = calibrated_model.predict_proba(X_test)[:,1]
+
+#3. create calibration curves
+actual_uncal, predicted_uncal = calibration_curve(y_test, uncalibrated, n_bins=10)
+actual_cal, predicted_cal = calibration_curve(y_test, calibrated, n_bins=10)
+
+#4. plot
+plt.plot([0,1], [0,1], 'k--', label="Prefect")
+plt.plot(
+    predicted_uncal,
+    actual_uncal,
+    "o-",
+    label = "Uncalibrated"
+)
+
+plt.plot(
+    predicted_cal,
+    actual_cal,
+    "o-",
+    label = "Calibrated"
+)
+plt.show()
+
+#SHAP Interpretation — Global & Local
+#SHAP helps us understand why the model makes a decision.
+#It is a way of explaining a "black box" model.
+
+import shap
+#2. Get the Trained XGBoost classifier model out of the pipeline.
+xgb_classifier = xgb_model.named_steps['classifier']
+#3. Transform X_test using the same preprocessing used for training.
+X_test_transformed = xgb_model.named_steps['preprocessor'].transform(X_test)
+#4. Get feature names after one-hot enocding , so plots are readable
+feature_names = xgb_model.named_steps['preprocessor'].get_feature_names_out()
+#5. Convert to a dataframe for cleaner SHAP plots
+X_test_df = pd.DataFrame(X_test_transformed, columns=feature_names)
+#6. Create SHAP explainer built for tree-based model
+explainer = shap.TreeExplainer(xgb_classifier)
+#7. Calculate SHAP values for every row in the test set
+shap_values = explainer.shap_values(X_test_df)
+shap_values
+#Global explanation
+#This shows which features matter most overall.
+#It also shows if a feature increases or decreases risk.
+shap.summary_plot(shap_values, X_test_df)
+
+#Local explanation
+#This shows why the model made a specific prediction for a single instance.
+# 1. Pick one row to explain, e.g. the 5th applicant in the test set
+row_index = 5
+#2. Draw a waterfall plot showing how each feature pushed the prediction up or down.
+shap.plots.waterfall(
+    shap.Explanation(
+        values = shap_values[row_index],
+        base_values = explainer.expected_value,
+        data = X_test_df.iloc[row_index],
+        feature_names = feature_names
+    )
+)
