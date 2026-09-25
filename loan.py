@@ -483,3 +483,14 @@ print(f"False Negative : {len(false_negative)}")
 #False Positive : 224
 #False Negative : 280
 #False Negative > False Positive
+
+# Save the Final Model
+#Once we are happy with the model, we save it.
+#We also save the settings it needs, like the chosen threshold.
+#This saved file can now be used in a real application.
+
+import joblib
+
+joblib.dump(calibrated_model, "credit_risk_model.pkl")
+
+joblib.dump(best_threshold, "best_threshold.pkl")
