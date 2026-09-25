@@ -271,3 +271,31 @@ xgb_model=Pipeline([
 ])
 xgb_model.fit(X_train,y_train)
 evaluate_model("XGBoost Model", xgb_model, X_test, y_test)
+
+#hyper parameter tuning for XGBoost model
+from sklearn.model_selection import RandomizedSearchCV,GridSearchCV
+from scipy.stats import uniform, randint
+
+param_grid = {
+    "classifier__n_estimators": [480],
+    "classifier__max_depth" : [6],
+    "classifier__learning_rate" : [0.0747755558908225],
+    "classifier__subsample": [0.8911358161203551],
+    "classifier__colsample_bytree" :[0.7026104173139325],
+    "classifier__min_child_weight": [4],
+    "classifier__gamma": [0.41978304579620707]
+}
+# lower gamma -> more splits -> complex tree -> higher overfitting risk
+# higher gamma -> less splits ->  simpler tree -> low overfitting
+
+xgb_tune = GridSearchCV(
+    xgb_model,
+    param_grid,
+    cv=cv,
+    scoring="average_precision",
+    n_jobs=-1,
+    verbose=3
+)
+
+xgb_tune.fit(X_train, y_train)
+evaluate_model("XGBoost after Hyperparameter Tuning", xgb_tune.best_estimator_, X_test, y_test)
