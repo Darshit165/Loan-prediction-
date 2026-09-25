@@ -299,3 +299,40 @@ xgb_tune = GridSearchCV(
 
 xgb_tune.fit(X_train, y_train)
 evaluate_model("XGBoost after Hyperparameter Tuning", xgb_tune.best_estimator_, X_test, y_test)
+
+
+#comparison of all models
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    roc_auc_score
+)
+
+models = {
+    "Logistic Regression": baseline_model,
+    "Random Forest": randomforest,
+    "Random Forest Tuned": random_search_forest,
+    "XGBoost": xgb_model,
+    "XGBoost Tuned": xgb_tune
+}
+
+results = []
+
+for name, model in models.items():
+
+    y_pred = model.predict(X_test)
+    y_prob = model.predict_proba(X_test)[:, 1]
+
+    results.append({
+        "Model": name,
+        "Accuracy": accuracy_score(y_test, y_pred),
+        "Precision": precision_score(y_test, y_pred),
+        "Recall": recall_score(y_test, y_pred),
+        "F1 Score": f1_score(y_test, y_pred),
+        "ROC-AUC": roc_auc_score(y_test, y_prob)
+    })
+comparison_df = pd.DataFrame(results)
+
+print(comparison_df)
