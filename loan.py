@@ -459,3 +459,27 @@ shap.plots.waterfall(
         feature_names = feature_names
     )
 )
+
+#Analyzing False Positives & False Negatives
+
+#The model will not be perfect.
+#False positives are safe people wrongly marked risky.
+#False negatives are risky people wrongly marked safe.
+#We study these cases to understand where the model struggles.
+
+#Get predictions from the best performing XGBoost model on the test set
+y_pred = xgb_tune.predict(X_test)
+#Create a dataframe to easily compare the actual and predicted values
+result_df = X_test.copy()
+result_df['actual'] = y_test
+result_df['predicted'] = y_pred
+#Identify False Positive : Model Predicted 1, but the actual was 0
+false_positive = result_df[(result_df['actual']== 0) & (result_df['predicted']== 1)]
+
+#Identify False Negative : Model Predicted 0, but the actual was 1
+false_negative = result_df[(result_df['actual']== 1) & (result_df['predicted']== 0)]
+print(f"False Positive : {len(false_positive)}")
+print(f"False Negative : {len(false_negative)}")
+#False Positive : 224
+#False Negative : 280
+#False Negative > False Positive
