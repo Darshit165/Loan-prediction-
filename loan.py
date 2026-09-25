@@ -217,3 +217,12 @@ def evaluate_model(model_name, model, X_test, y_test, threshold=None):
   plt.ylabel("Precision")
   plt.title(f"{model_name} Precision-Recall Curve")
   plt.show()
+
+  #Baseline Model — Logistic Regression
+  from sklearn.pipeline import Pipeline
+baseline_model=Pipeline([
+    ("preprocessor",preprocessor_lr),
+    ("classifier",LogisticRegression(class_weight="balanced",random_state=42))
+])
+baseline_model.fit(X_train,y_train)
+evaluate_model("Baseline Logistic Regression", baseline_model, X_test, y_test)
