@@ -226,3 +226,12 @@ baseline_model=Pipeline([
 ])
 baseline_model.fit(X_train,y_train)
 evaluate_model("Baseline Logistic Regression", baseline_model, X_test, y_test)
+
+#Baseline Model — Randomforest classification Regression
+from sklearn.ensemble import RandomForestClassifier
+randomforest=Pipeline([
+    ("preprocessor",preprocessor_xg),
+    ("classifier",RandomForestClassifier(random_state=42,class_weight="balanced"))
+])
+randomforest.fit(X_train,y_train)
+evaluate_model("Baseline Random Forest", randomforest, X_test, y_test)
