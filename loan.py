@@ -173,53 +173,55 @@ for cv_name,pipe in [("Logistic Regression", lr_cv_pipeline),
 # Evaluation Helper Function
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, classification_report, precision_recall_curve
 def evaluate_model(model_name, model, X_test, y_test, threshold=None):
-  y_pred_prob = model.predict_proba(X_test)[:,1]
 
-  if threshold:
-    y_pred = (y_pred_prob > threshold).astype(int)
-  else:
-    y_pred = model.predict(X_test)
+    y_pred_prob = model.predict_proba(X_test)[:, 1]
 
-  #Metrics
-  accuracy     = accuracy_score(y_test, y_pred)    #Overall model's preformance
-  precision    = precision_score(y_test, y_pred)   #When the model says 1, how oftenly is it actually 1.
-  recall       = recall_score(y_test, y_pred)      #of the actual 1 how many did the model catches
-  f1           = f1_score(y_test, y_pred)          #Harmonic mean of precision and recall
+    if threshold is not None:
+        y_pred = (y_pred_prob >= threshold).astype(int)
+    else:
+        y_pred = model.predict(X_test)
 
-  conf_matrix   = confusion_matrix(y_test, y_pred)
-  class_report  = classification_report(y_test, y_pred)
+    # Metrics
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+
+    conf_matrix = confusion_matrix(y_test, y_pred)
+    class_report = classification_report(y_test, y_pred)
+
+    print(f"{model_name} Metrics:")
+
+    if threshold is not None:
+        print(f"Used Threshold : {threshold:.2f}")
+
+    print(f"Accuracy : {accuracy:.2f}")
+    print(f"Precision : {precision:.2f}")
+    print(f"Recall : {recall:.2f}")
+    print(f"F1 : {f1:.2f}")
+    print()
+
+    print(f"{model_name} Classification Report:")
+    print(class_report)
+
+    # Plotting confusion matrix
+    sns.heatmap(conf_matrix, annot=True, fmt="d")
+    plt.title(f"{model_name} Confusion Matrix")
+    plt.ylabel("Actual Values")
+    plt.xlabel("Predicted Values")
+    plt.show()
 
 
-  print(f"{model_name} Metrics:")
-  if threshold is not None: # Only print threshold if provided
-    print(f"Used Threshold : {threshold:.2f}")
-  print(f"Accuracy : {accuracy:.2f}")
-  print(f"Precision : {precision:.2f}")
-  print(f"Recall : {recall:.2f}")
-  print(f"F1 : {f1:.2f}")
-  print()
-  print(f"{model_name} Classification Report:")
-  print(class_report)
+    # Plotting Precision-Recall curve
+    precisions, recalls, threshold = precision_recall_curve(y_test, y_pred_prob)
+    plt.plot(recalls, precisions)
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+    plt.title(f"{model_name} Precision-Recall Curve")
+    plt.show()
 
-
-  #Plotting confusion matrix
-  sns.heatmap(conf_matrix, annot=True, fmt="d")
-  plt.title(f"{model_name} Confusion Matrix")
-  plt.ylabel("Actual Values")
-  plt.xlabel("Predicted Values")
-  plt.show()
-
-
-  #Plotting ROC-AUC curve
-  precisions, recalls, threshold = precision_recall_curve(y_test, y_pred_prob)
-  plt.plot(recalls, precisions)
-  plt.xlabel("Recall")
-  plt.ylabel("Precision")
-  plt.title(f"{model_name} Precision-Recall Curve")
-  plt.show()
-
-  #Baseline Model — Logistic Regression
-  from sklearn.pipeline import Pipeline
+#Baseline Model — Logistic Regression
+from sklearn.pipeline import Pipeline
 baseline_model=Pipeline([
     ("preprocessor",preprocessor_lr),
     ("classifier",LogisticRegression(class_weight="balanced",random_state=42))
@@ -336,3 +338,39 @@ for name, model in models.items():
 comparison_df = pd.DataFrame(results)
 
 print(comparison_df)
+
+#Optimizing the Classification Threshold
+#The model gives a probability, not a direct yes or no.
+#We decide a cut-off point to turn it into a decision.
+#We check different cut-off points and pick the best one.
+
+
+from sklearn.metrics import precision_recall_curve
+import numpy as np
+
+y_pred_prob = xgb_tune.predict_proba(X_test)[:, 1]
+
+precision, recall, thresholds = precision_recall_curve(
+    y_test,
+    y_pred_prob
+)
+
+f1_scores = (
+    2 * precision[:-1] * recall[:-1]
+    / (precision[:-1] + recall[:-1] + 1e-9)
+)
+
+best_index = np.argmax(f1_scores)
+
+best_threshold = thresholds[best_index]
+
+print("Best Threshold:", best_threshold)
+print("Best F1:", f1_scores[best_index])
+
+evaluate_model(
+    "XGBoost Tuned - Optimized Threshold",
+    xgb_tune,
+    X_test,
+    y_test,
+    threshold=best_threshold
+)
